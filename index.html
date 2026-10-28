@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ajay Planner</title>
+<style>
+:root{
+  --bg:#0b0e14;--panel:#121722;--panel2:#171d29;--line:#273042;--text:#f4f7fb;
+  --muted:#9aa6b7;--accent:#88a7ff;--accent2:#b7c7ff;--good:#68d6a1;--warn:#f4c563;--bad:#ff7d86;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:grid;grid-template-columns:238px minmax(0,1fr);min-height:100vh}
+.side{border-right:1px solid var(--line);background:#0f131b;padding:22px 14px;display:flex;flex-direction:column;gap:22px}
+.brand{display:flex;gap:11px;align-items:center;padding:0 6px}
+.logo{width:42px;height:42px;border-radius:12px;background:var(--accent);color:#0b0e14;font-weight:900;display:grid;place-items:center}
+.brand h1{font-size:15px;margin:0}.brand p{font-size:11px;color:var(--muted);margin:3px 0 0}
+.nav{display:grid;gap:5px}.nav button{border:0;background:transparent;color:var(--muted);text-align:left;padding:11px 12px;border-radius:10px}
+.nav button:hover,.nav button.active{background:var(--panel2);color:var(--text)}
+.saved{margin-top:auto;color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center;padding:8px}
+.saved i{width:8px;height:8px;border-radius:50%;background:var(--good)}
+main{padding:32px;max-width:1500px;width:100%}
+.view{display:none}.view.active{display:block}
+.head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:22px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--accent2);margin:0 0 7px}
+h2{font-size:30px;letter-spacing:-.03em;margin:0}h3{font-size:16px;margin:0}
+.muted{color:var(--muted)}.head p:last-child{max-width:760px;margin:8px 0 0}
+.btn,.btn2,.danger{border-radius:10px;padding:10px 13px;border:1px solid var(--line);font-weight:700}
+.btn{background:var(--accent);border-color:transparent;color:#0b0e14}.btn2{background:var(--panel2);color:var(--text)}.danger{background:transparent;color:var(--bad);border-color:#4d2d35}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px}
+.card{padding:17px}.card span{font-size:12px;color:var(--muted)}.card strong{display:block;font-size:29px;margin:8px 0 4px}.card small{color:var(--muted)}
+.panel{padding:19px;margin-bottom:17px}.ph{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:15px}.ph p{margin:5px 0 0;font-size:12px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1.1fr .9fr;gap:17px}
+.notice{padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:13px;margin-bottom:16px}
+.urgent{border-left:3px solid var(--bad)}
+.timeline{display:grid;gap:8px}
+.block{display:grid;grid-template-columns:92px 1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+.block .time{font-weight:800;font-size:12px;color:var(--accent2)}.block b{display:block}.block small{color:var(--muted)}
+.tag{font-size:10px;font-weight:800;padding:4px 7px;border-radius:999px;background:#222a39;color:var(--muted);white-space:nowrap}
+.tag.urgent{color:var(--bad);border:0}.tag.study{color:var(--accent2)}.tag.fixed{color:var(--warn)}.tag.done{color:var(--good)}
+.task-list{display:grid;gap:8px}.task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0}.task input[type=checkbox]{width:18px;height:18px;margin-top:2px}.task.done b{text-decoration:line-through;color:var(--muted)}
+.task small{display:block;color:var(--muted);margin-top:3px}.priority{font-size:11px;font-weight:800}.p3{color:var(--bad)}.p2{color:var(--warn)}.p1{color:var(--accent2)}
+.formgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px}.formgrid .wide{grid-column:1/-1}
+label{display:grid;gap:6px;font-size:11px;color:var(--muted)}
+input,select,textarea{background:#0e131c;border:1px solid var(--line);color:var(--text);padding:10px;border-radius:9px;outline:none;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:72px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.calendar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.daycard{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:12px;min-width:0}
+.daycard.today{border-color:var(--accent)}.daycard h4{margin:0 0 3px}.daycard .date{font-size:11px;color:var(--muted)}
+.daycard ul{padding-left:17px;margin:10px 0 0}.daycard li{font-size:12px;margin:6px 0;color:#dfe5ef}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:13px}
+table{width:100%;border-collapse:collapse;min-width:880px;background:var(--panel)}
+th,td{padding:11px;border-bottom:1px solid var(--line);font-size:12px;text-align:left}th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:#10151e}
+tr:last-child td{border-bottom:0}table input,table select{width:74px;padding:8px}
+.grade{font-weight:900;min-width:34px;display:inline-block;text-align:center;background:var(--panel2);padding:5px 8px;border-radius:7px}
+.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.settings{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+.progressbar{height:8px;background:#222a37;border-radius:999px;overflow:hidden}.progressbar i{display:block;height:100%;background:var(--accent);width:0%}
+.pill{font-size:11px;border:1px solid var(--line);padding:7px 9px;border-radius:999px;color:var(--muted)}
+.empty{color:var(--muted);font-size:13px;padding:12px 0}
+.toast{position:fixed;right:18px;bottom:18px;background:#1b2330;border:1px solid var(--line);padding:10px 13px;border-radius:10px;opacity:0;transform:translateY(7px);pointer-events:none;transition:.2s}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1050px){.grid4{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){
+ .app{grid-template-columns:1fr}.side{position:sticky;top:0;z-index:5;border-right:0;border-bottom:1px solid var(--line);padding:10px}.brand,.saved{display:none}
+ .nav{display:flex;overflow:auto}.nav button{white-space:nowrap;text-align:center;padding:9px 10px;font-size:12px}
+ main{padding:19px 13px}.head{flex-direction:column}.formgrid,.settings{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}.calendar{grid-template-columns:1fr}.block{grid-template-columns:76px 1fr}.block .tag{grid-column:2}.grid4{grid-template-columns:1fr 1fr}
+}
+@media(max-width:430px){.grid4{grid-template-columns:1fr}h2{font-size:26px}}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0e14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ajay Planner">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand"><div class="logo">AP</div><div><h1>Ajay Planner</h1><p>Academic + daily life tracker</p></div></div>
+  <nav class="nav">
+    <button class="active" data-view="today">Today</button>
+    <button data-view="planner">Planner</button>
+    <button data-view="timetable">Timetable</button>
+    <button data-view="semester5">Sem V</button>
+    <button data-view="semester4">Sem IV</button>
+    <button data-view="cgpa">CGPA</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+  <div class="saved"><i></i><span>Auto-saved on this device</span></div>
+</aside>
+
+<main>
+<section class="view active" id="today">
+ <div class="head"><div><p class="eyebrow">PERSONAL DAY PLAN</p><h2 id="todayTitle">Today</h2><p class="muted">Your day from wake-up to sleep. Urgent work automatically outranks normal study.</p></div><button class="btn" id="replanToday">Replan today</button></div>
+ <div id="urgentBanner" class="notice urgent"></div>
+ <div class="grid4">
+   <article class="card"><span>Tasks done</span><strong id="doneStat">0/0</strong><small>for selected day</small></article>
+   <article class="card"><span>Study planned</span><strong id="studyStat">0h</strong><small>excluding college / routine</small></article>
+   <article class="card"><span>Next deadline</span><strong id="deadlineStat">—</strong><small id="deadlineName">—</small></article>
+   <article class="card"><span>Projected Sem V SGPA</span><strong id="sgpaStat">—</strong><small>from current grade targets</small></article>
+ </div>
+ <div class="two">
+   <section class="panel"><div class="ph"><div><h3>Today's timeline</h3><p id="dayAssumption"></p></div><input type="date" id="todayDate"></div><div id="timeline" class="timeline"></div></section>
+   <section class="panel"><div class="ph"><div><h3>Today's task queue</h3><p>Check items off as you finish them.</p></div><span class="pill" id="queueCount">0 tasks</span></div><div id="todayTasks" class="task-list"></div></section>
+ </div>
+</section>
+
+<section class="view" id="planner">
+ <div class="head"><div><p class="eyebrow">ADAPTIVE PLANNER</p><h2>Add work once, then replan</h2><p class="muted">Add any sudden internal, assignment, lab record, meeting or personal task. The scheduler places urgent work first and carries unfinished work forward.</p></div></div>
+ <div class="two">
+  <section class="panel">
+   <div class="ph"><div><h3>Add a task</h3><p>Use “Immediate” when it should interrupt normal study.</p></div></div>
+   <form id="taskForm" class="formgrid">
+    <label class="wide">Task<input id="taskTitle" required placeholder="e.g. Finish SE assignment"></label>
+    <label>Type<select id="taskType"><option>Study</option><option>Assignment</option><option>Internal</option><option>Lab</option><option>Personal</option></select></label>
+    <label>Due date<input id="taskDue" type="date"></label>
+    <label>Duration (min)<input id="taskDuration" type="number" min="15" max="480" step="15" value="60"></label>
+    <label>Priority<select id="taskPriority"><option value="3">Urgent</option><option value="2" selected>High</option><option value="1">Normal</option></select></label>
+    <label>Subject<select id="taskSubject"><option value="">General</option><option>OS</option><option>CN</option><option>SE</option><option>FDS</option><option>BDA</option><option>DRRM</option></select></label>
+    <label><span>Immediate?</span><select id="taskImmediate"><option value="false">No</option><option value="true">Yes — do ASAP</option></select></label>
+    <div class="row" style="align-self:end"><button class="btn" type="submit">Add & replan</button></div>
+   </form>
+  </section>
+  <section class="panel">
+   <div class="ph"><div><h3>Day template</h3><p>Starter times are editable. Set them once and the site remembers.</p></div></div>
+   <div class="settings">
+    <label>Wake up<input id="wakeTime" type="time"></label>
+    <label>College / fixed work starts<input id="collegeStart" type="time"></label>
+    <label>College / fixed work ends<input id="collegeEnd" type="time"></label>
+    <label>Sleep<input id="sleepTime" type="time"></label>
+   </div>
+   <div class="row" style="margin-top:12px"><button id="saveTemplate" class="btn2" type="button">Save day template</button><span class="muted" style="font-size:11px">College block can be disabled in Settings.</span></div>
+  </section>
+ </div>
+
+ <section class="panel">
+  <div class="ph"><div><h3>Upcoming plan</h3><p>Preloaded around your OS/CN internals, SE assignment, and Nov 5–7 mids.</p></div><button class="btn2" id="carryForward" type="button">Carry unfinished forward</button></div>
+  <div id="calendar" class="calendar"></div>
+ </section>
+
+ <section class="panel">
+  <div class="ph"><div><h3>All active tasks</h3><p>Delete only if you no longer need the task.</p></div></div>
+  <div id="allTasks" class="task-list"></div>
+ </section>
+</section>
+
+
+<section class="view" id="timetable">
+ <div class="head"><div><p class="eyebrow">REAL COLLEGE TIMETABLE</p><h2>Weekly timetable</h2><p class="muted">Built from the timetable image you sent. PE-I is shown as BDA and OE-I as DRRM for your electives.</p></div><span class="pill" id="batchBadge">Batch B1</span></div>
+ <div class="notice"><b>Periods:</b> I 9:10–10:10 AM • II 10:10–11:10 AM • III 11:15 AM–12:15 PM • Lunch 12:15–1:00 PM • IV 1:00–2:00 PM • V 2:00–3:00 PM • VI 3:05–4:05 PM</div>
+ <div class="tablewrap">
+  <table class="weekly-table">
+   <thead><tr><th>Day</th><th>I</th><th>II</th><th>III</th><th>IV</th><th>V</th><th>VI</th></tr></thead>
+   <tbody id="weeklyBody"></tbody>
+  </table>
+ </div>
+ <section class="panel" style="margin-top:16px">
+  <div class="ph"><div><h3>Your batch</h3><p>Select once. Labs and mentoring update everywhere in the planner.</p></div></div>
+  <div class="row"><label>Batch<select id="batchSelect"><option>B1</option><option>B2</option><option>B3</option></select></label><span class="muted" style="font-size:12px">If your batch is different later, change it here.</span></div>
+ </section>
+</section>
+
+<section class="view" id="semester5">
+ <div class="head"><div><p class="eyebrow">ACADEMIC TRACKER</p><h2>Semester V</h2><p class="muted">Targets and internal marks are preloaded from our calculations. Change anything once and it is remembered.</p></div></div>
+ <div class="tablewrap"><table><thead><tr><th>Subject</th><th>Cr</th><th>Target</th><th>Attendance</th><th>Assignment</th><th>Mid-1</th><th>Mid-2</th><th>CIE /40</th><th>SEE needed</th></tr></thead><tbody id="sem5Body"></tbody></table></div>
+ <section class="panel" style="margin-top:16px"><div class="ph"><div><h3>Labs</h3><p>Current expected grades.</p></div></div><div id="labs" class="calendar"></div></section>
+</section>
+
+<section class="view" id="semester4">
+ <div class="head"><div><p class="eyebrow">PREVIOUS SEMESTER</p><h2>Semester IV</h2><p class="muted">Preloaded from the grades you gave me.</p></div></div>
+ <div class="tablewrap"><table><thead><tr><th>Course</th><th>Credits</th><th>Grade</th><th>Grade point</th><th>Credit points</th></tr></thead><tbody id="sem4Body"></tbody></table></div>
+ <section class="panel" style="margin-top:16px"><div class="row"><label>Upskill grade<select id="upskillGrade"><option value="">Unknown</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select></label><div class="card" style="padding:12px"><span>Sem IV SGPA</span><strong id="sem4Sgpa" style="font-size:24px">—</strong></div></div></section>
+</section>
+
+<section class="view" id="cgpa">
+ <div class="head"><div><p class="eyebrow">LONG-TERM VIEW</p><h2>CGPA</h2><p class="muted">Add Sem I–III once. Sem IV and projected Sem V are calculated automatically.</p></div></div>
+ <div class="two"><section class="panel"><div id="cgpaRows"></div></section><section class="panel" style="display:grid;place-items:center;text-align:center;min-height:230px"><div><span class="muted">Projected CGPA</span><div id="cgpaValue" style="font-size:58px;font-weight:900;letter-spacing:-.05em;margin:8px 0">—</div><p id="cgpaNote" class="muted" style="font-size:12px"></p></div></section></div>
+</section>
+
+<section class="view" id="settings">
+ <div class="head"><div><p class="eyebrow">SETTINGS & BACKUP</p><h2>Personal settings</h2><p class="muted">The site works offline. Data stays in this browser unless you export a backup.</p></div></div>
+ <section class="panel settings">
+  <label>Name<input id="studentName"></label><label>Roll number<input id="rollNumber"></label>
+  <label>Use college timetable<select id="useCollege"><option value="true">Yes</option><option value="false">No</option></select></label>
+  <label>Planning date range<input value="Oct 27 – Nov 7, 2026" disabled></label>
+ </section>
+ <section class="panel"><div class="ph"><div><h3>Install on phone</h3><p>Install this tracker like an app. Chrome will show the install option when hosted over HTTPS.</p></div></div><div class="row"><button id="installAppBtn" class="btn" disabled>Install app</button><span id="installHint" class="muted" style="font-size:12px">After publishing on GitHub Pages, open the site in Chrome.</span></div></section>
+<section class="panel"><div class="row"><button id="exportBtn" class="btn">Export backup</button><label class="btn2" style="display:inline-flex;align-items:center;cursor:pointer">Import backup<input id="importFile" type="file" accept="application/json" style="display:none"></label><button id="resetBtn" class="danger">Reset site</button></div></section>
+</section>
+</main>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+const KEY="ajay_personal_academic_planner_v2";
+const GP={S:10,A:9,B:8,C:7,D:6,E:5,F:0};
+const GMIN={S:90,A:80,B:70,C:60,D:50,E:40,F:0};
+const D0={
+ profile:{name:"Ajay",roll:"160124733375",batch:"B1"},
+ template:{wake:"06:30",collegeStart:"09:00",collegeEnd:"16:30",sleep:"23:30",useCollege:true},
+ sem5:[
+  {id:"os",name:"Operating Systems",cr:3,target:"S",att:3,asg:15,m1:20,m2:""},
+  {id:"cn",name:"Computer Networks",cr:3,target:"A",att:3,asg:15,m1:15,m2:""},
+  {id:"se",name:"Software Engineering",cr:3,target:"B",att:0,asg:15,m1:12,m2:""},
+  {id:"fds",name:"Fundamentals of Data Science",cr:3,target:"A",att:2,asg:15,m1:16,m2:""},
+  {id:"bda",name:"Big Data Analytics",cr:3,target:"B",att:0,asg:10,m1:15,m2:""},
+  {id:"drrm",name:"Disaster Risk Reduction & Management",cr:3,target:"A",att:3,asg:15,m1:16,m2:""}
+ ],
+ labs:[{name:"CN Lab",cr:1.5,grade:"A"},{name:"OS Lab",cr:1.5,grade:"A"},{name:"SE Lab",cr:1,grade:"A"}],
+ sem4:[
+  {name:"COA",cr:4,grade:"B"},{name:"DBMS",cr:3,grade:"B"},{name:"TOC",cr:3,grade:"C"},
+  {name:"Web Programming",cr:3,grade:"C"},{name:"Probability & Statistics",cr:4,grade:"B"},
+  {name:"Web Programming Lab",cr:1.5,grade:"A"},{name:"DBMS Lab",cr:1.5,grade:"S"},{name:"LaTeX Workshop",cr:1,grade:"A"}
+ ],
+ upskill:"",
+ prior:{sem1:{sgpa:"",cr:20},sem2:{sgpa:"",cr:20},sem3:{sgpa:"",cr:22}},
+ tasks:[
+  {id:"osint2",title:"OS Internal-2 preparation",type:"Internal",subject:"OS",due:"2026-10-28",duration:180,priority:3,immediate:true,done:false,targetDate:"2026-10-28",note:"Immediate priority: internal tomorrow."},
+  {id:"cnint2",title:"CN Internal-2 preparation",type:"Internal",subject:"CN",due:"2026-10-29",duration:210,priority:3,immediate:false,done:false,targetDate:"2026-10-28",note:"Main task after OS internal."},
+  {id:"seasg",title:"Complete SE assignment",type:"Assignment",subject:"SE",due:"2026-10-30",duration:150,priority:2,immediate:false,done:false,targetDate:"2026-10-28",note:"Target finish date only; edit if faculty deadline differs."},
+  {id:"osu3",title:"OS Unit III — Memory Management",type:"Study",subject:"OS",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-10-30"},
+  {id:"cnu3",title:"CN Unit III — Network Layer",type:"Study",subject:"CN",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-10-30"},
+  {id:"fdsu3",title:"FDS Unit III — NumPy & pandas",type:"Study",subject:"FDS",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-10-31"},
+  {id:"seu3",title:"SE Unit III — Project Planning & Estimation",type:"Study",subject:"SE",due:"2026-11-04",duration:90,priority:1,immediate:false,done:false,targetDate:"2026-10-31"},
+  {id:"bdau3",title:"BDA Unit III — MapReduce & YARN",type:"Study",subject:"BDA",due:"2026-11-04",duration:105,priority:2,immediate:false,done:false,targetDate:"2026-10-31"},
+  {id:"osu4",title:"OS Unit IV — Synchronization & Deadlocks",type:"Study",subject:"OS",due:"2026-11-04",duration:135,priority:2,immediate:false,done:false,targetDate:"2026-11-01"},
+  {id:"cnu4",title:"CN Unit IV — Transport Layer",type:"Study",subject:"CN",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-11-01"},
+  {id:"drrmu34",title:"DRRM Units III–IV",type:"Study",subject:"DRRM",due:"2026-11-04",duration:90,priority:1,immediate:false,done:false,targetDate:"2026-11-01"},
+  {id:"fdsu4",title:"FDS Unit IV — Cleaning, Encoding & Hypothesis Testing",type:"Study",subject:"FDS",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-11-02"},
+  {id:"seu4",title:"SE Unit IV — Modelling & Design",type:"Study",subject:"SE",due:"2026-11-04",duration:90,priority:1,immediate:false,done:false,targetDate:"2026-11-02"},
+  {id:"bdau4",title:"BDA Unit IV — Hive & Pig",type:"Study",subject:"BDA",due:"2026-11-04",duration:105,priority:2,immediate:false,done:false,targetDate:"2026-11-02"},
+  {id:"osu5",title:"OS Unit V — File Systems & Security",type:"Study",subject:"OS",due:"2026-11-04",duration:105,priority:2,immediate:false,done:false,targetDate:"2026-11-03"},
+  {id:"cnu5",title:"CN Unit V — DNS, Email, SMTP, FTP, TELNET, SNMP",type:"Study",subject:"CN",due:"2026-11-04",duration:105,priority:2,immediate:false,done:false,targetDate:"2026-11-03"},
+  {id:"drrmu5",title:"DRRM Unit V — Mitigation & DM Act 2005",type:"Study",subject:"DRRM",due:"2026-11-04",duration:75,priority:1,immediate:false,done:false,targetDate:"2026-11-03"},
+  {id:"fdsu5",title:"FDS Unit V — Regression, PCA & Clustering",type:"Study",subject:"FDS",due:"2026-11-04",duration:135,priority:2,immediate:false,done:false,targetDate:"2026-11-04"},
+  {id:"seu5",title:"SE Unit V — Testing & Quality",type:"Study",subject:"SE",due:"2026-11-04",duration:90,priority:1,immediate:false,done:false,targetDate:"2026-11-04"},
+  {id:"bdau5",title:"BDA Unit V — Spark, RDD & DAG",type:"Study",subject:"BDA",due:"2026-11-04",duration:105,priority:2,immediate:false,done:false,targetDate:"2026-11-04"},
+  {id:"rev",title:"Full Mid-2 rapid revision",type:"Study",subject:"",due:"2026-11-04",duration:180,priority:3,immediate:false,done:false,targetDate:"2026-11-04"}
+ ],
+ events:[
+  {date:"2026-10-28",title:"OS Internal-2"},
+  {date:"2026-10-29",title:"CN Internal-2"},
+  {date:"2026-11-05",title:"Mid-2 exams — Day 1"},
+  {date:"2026-11-06",title:"Mid-2 exams — Day 2"},
+  {date:"2026-11-07",title:"Mid-2 exams — Day 3"}
+ ]
+};
+let data=load();
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));return x?Object.assign(clone(D0),x):clone(D0)}catch(e){return clone(D0)}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function toast(s){const e=document.getElementById("toast");e.textContent=s;e.classList.add("show");clearTimeout(window.tt);window.tt=setTimeout(()=>e.classList.remove("show"),1800)}
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function fmt(v,d=2){return Number.isFinite(v)?v.toFixed(d):"—"}
+function toMin(t){const [h,m]=t.split(":").map(Number);return h*60+m}
+function clock12(t){
+  const [h,m]=t.split(":").map(Number);
+  const suffix=h>=12?"PM":"AM";
+  const h12=h%12||12;
+  return h12+":"+String(m).padStart(2,"0")+" "+suffix;
+}
+function tstr(m){
+  m=Math.round(m);
+  const h24=Math.floor(m/60)%24, mins=m%60;
+  const suffix=h24>=12?"PM":"AM";
+  const h12=h24%12||12;
+  return h12+":"+String(mins).padStart(2,"0")+" "+suffix;
+}
+function dispDate(d){return new Date(d+"T00:00:00").toLocaleDateString(undefined,{weekday:"short",day:"2-digit",month:"short"})}
+function sem5cie(s){const m2=s.m2===""?num(s.m1):num(s.m2);return clamp(num(s.att)+num(s.asg)+(num(s.m1)+m2)/2,0,40)}
+function seeNeed(s){return Math.max(0,GMIN[s.target]-sem5cie(s))}
+function sem5sgpa(){let cp=0,cr=0;data.sem5.forEach(s=>{cp+=s.cr*GP[s.target];cr+=s.cr});data.labs.forEach(l=>{cp+=l.cr*GP[l.grade];cr+=l.cr});return cp/cr}
+function sem4calc(){let cp=0,cr=0;data.sem4.forEach(x=>{cp+=x.cr*GP[x.grade];cr+=x.cr});if(data.upskill){cp+=.5*GP[data.upskill];cr+=.5}return{cp,cr,sgpa:cp/cr}}
+function taskScore(t,day){
+  let score=t.priority*100+(t.immediate?250:0);
+  if(t.due){const diff=(new Date(t.due+"T00:00:00")-new Date(day+"T00:00:00"))/86400000;score+=diff<=0?260:Math.max(0,180-diff*35)}
+  return score;
+}
+function tasksForDay(day){
+  const active=data.tasks.filter(t=>!t.done);
+  return active.filter(t=>t.targetDate===day || t.immediate || (t.due && t.due<=day))
+    .sort((a,b)=>taskScore(b,day)-taskScore(a,day));
+}
+function weekdayName(day){
+  return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date(day+"T00:00:00").getDay()];
+}
+function dayCollegeBlocks(day){
+  if(!data.template.useCollege) return [];
+  const wd=weekdayName(day), B=data.profile.batch||"B1";
+  const blocks=[];
+  const add=(a,b,title,note="College timetable")=>blocks.push({start:toMin(a),end:toMin(b),title,kind:"fixed",note});
+  const labTue={B1:"Computer Networks Lab",B2:"Operating Systems Lab",B3:"Software Engineering Lab"}[B];
+  const labWed={B1:"Software Engineering Lab",B2:"Computer Networks Lab",B3:"Operating Systems Lab"}[B];
+  const labThu={B1:"Operating Systems Lab",B2:"Software Engineering Lab",B3:"Computer Networks Lab"}[B];
+
+  if(wd==="Monday"){
+    add("09:10","10:10","FDS"); add("10:10","11:10","DRRM"); add("11:15","12:15","BDA");
+    add("12:15","13:00","Lunch break"); add("13:00","14:00","Software Engineering");
+    add("14:00","15:00","Fit India"); add("15:05","16:05","Co/Extra Curricular Activities");
+  } else if(wd==="Tuesday"){
+    add("09:10","11:10",labTue,`${B} lab slot`);
+    add("11:15","12:15","Library"); add("12:15","13:00","Lunch break");
+    add("13:00","14:00","BDA"); add("14:00","15:00","FDS"); add("15:05","16:05","DRRM");
+  } else if(wd==="Wednesday"){
+    add("09:10","10:10","Software Engineering"); add("10:10","11:10","Computer Networks");
+    add("11:15","12:15","FDS"); add("12:15","13:00","Lunch break");
+    add("13:00","15:00",labWed,`${B} lab slot`); add("15:05","16:05","Library");
+  } else if(wd==="Thursday"){
+    add("09:10","11:10",labThu,`${B} lab slot`);
+    add("11:15","12:15","Library"); add("12:15","13:00","Lunch break");
+    add("13:00","14:00","Operating Systems");
+    if(B==="B2") add("14:00","15:00","B2 Mentoring");
+    else add("14:00","15:00","Open / college buffer",`${B}: no mentoring shown in this slot`);
+    add("15:05","16:05","Co/Extra Curricular Activities");
+  } else if(wd==="Friday"){
+    add("09:10","10:10","Computer Networks"); add("10:10","11:10","Operating Systems");
+    add("11:15","12:15","Software Engineering"); add("12:15","13:00","Lunch break");
+    add("13:00","14:00","BDA"); add("14:00","15:00","DRRM");
+    if(B==="B3") add("15:05","16:05","B3 Mentoring");
+    else add("15:05","16:05","Open / college buffer",`${B}: no mentoring shown in this slot`);
+  } else if(wd==="Saturday"){
+    add("09:10","10:10","Operating Systems"); add("10:10","11:10","Computer Networks");
+    if(B==="B1") add("11:15","12:15","B1 Mentoring");
+    else add("11:15","12:15","Open / college buffer",`${B}: no mentoring shown in this slot`);
+    add("12:15","13:00","Lunch break"); add("13:00","16:05","Co/Extra Curricular Activities");
+  }
+  return blocks;
+}
+function subtractBusy(free,busy){
+  let slots=free.slice();
+  busy.sort((a,b)=>a.start-b.start).forEach(b=>{
+    const next=[];
+    slots.forEach(([s,e])=>{
+      if(b.end<=s||b.start>=e) next.push([s,e]);
+      else{
+        if(s<b.start) next.push([s,b.start]);
+        if(b.end<e) next.push([b.end,e]);
+      }
+    });
+    slots=next;
+  });
+  return slots.filter(([s,e])=>e-s>=25);
+}
+function buildTimeline(day){
+  const T=data.template,w=toMin(T.wake),sleep=toMin(T.sleep);
+  let blocks=[{start:w,end:w+30,title:"Wake up + freshen up",kind:"fixed",note:"Start without phone scrolling."}];
+
+  const college=dayCollegeBlocks(day);
+  blocks.push(...college);
+
+  const events=data.events.filter(e=>e.date===day);
+  events.forEach(e=>{
+    blocks.push({start:toMin("08:45"),end:toMin("09:05"),title:e.title,kind:"event",note:"Reminder only — exact exam time was not provided."});
+  });
+
+  // Start with the whole usable day, then remove college + routine/event blocks.
+  let free=[[w+30,sleep-45]];
+  const busy=blocks.map(b=>({start:b.start,end:b.end}));
+  free=subtractBusy(free,busy);
+
+  // Avoid tiny gaps around lunch/classes; use library/open buffers as college time rather than scheduled study.
+  const queue=tasksForDay(day).map(x=>({...x,remaining:x.duration}));
+  for(const slot of free){
+    let cur=slot[0],end=slot[1];
+    while(cur+25<=end && queue.length){
+      const t=queue[0],available=end-cur;
+      let chunk=Math.min(t.remaining,available,90);
+      if(chunk<25) break;
+      blocks.push({start:cur,end:cur+chunk,title:t.title,kind:t.immediate||t.priority===3?"urgent":"study",note:(t.subject?t.subject+" • ":"")+t.type});
+      cur+=chunk;t.remaining-=chunk;
+      if(t.remaining<=0) queue.shift();
+      else cur+=10;
+    }
+  }
+
+  // Dinner only when not already covered by another block.
+  const dinnerStart=Math.min(sleep-150,20*60+30);
+  if(dinnerStart>w && dinnerStart<sleep-60){
+    const overlaps=blocks.some(b=>dinnerStart<b.end && dinnerStart+30>b.start);
+    if(!overlaps) blocks.push({start:dinnerStart,end:dinnerStart+30,title:"Dinner / break",kind:"fixed",note:"Keep this genuinely off-study."});
+  }
+  blocks.push({start:sleep-45,end:sleep,title:"Wind down + quick recall",kind:"fixed",note:"Pack for tomorrow, 10-minute recall, sleep."});
+  return blocks.sort((a,b)=>a.start-b.start);
+}
+function renderToday(){
+  const day=document.getElementById("todayDate").value||"2026-10-28";
+  document.getElementById("todayTitle").textContent=dispDate(day);
+  const q=tasksForDay(day),all=data.tasks.filter(t=>t.targetDate===day),done=all.filter(t=>t.done).length;
+  document.getElementById("doneStat").textContent=done+"/"+all.length;
+  const studyMin=buildTimeline(day).filter(b=>b.kind==="study"||b.kind==="urgent").reduce((a,b)=>a+b.end-b.start,0);
+  document.getElementById("studyStat").textContent=fmt(studyMin/60,1)+"h";
+  const upcoming=data.tasks.filter(t=>!t.done&&t.due).sort((a,b)=>a.due.localeCompare(b.due))[0];
+  document.getElementById("deadlineStat").textContent=upcoming?dispDate(upcoming.due):"—";
+  document.getElementById("deadlineName").textContent=upcoming?upcoming.title:"No dated tasks";
+  document.getElementById("sgpaStat").textContent=fmt(sem5sgpa());
+  document.getElementById("queueCount").textContent=q.length+" tasks";
+  const urgent=q.filter(t=>t.immediate||t.priority===3)[0];
+  document.getElementById("urgentBanner").innerHTML=urgent?`<b>Do first:</b> ${urgent.title}${urgent.due?` • due ${dispDate(urgent.due)}`:""}`:`<b>No emergency task.</b> Follow the planned study order.`;
+  const T=data.template;
+  document.getElementById("dayAssumption").textContent=`Wake ${clock12(T.wake)}, ${T.useCollege?`real college timetable loaded, `:"college timetable off, "}sleep ${clock12(T.sleep)}. Edit routine in Planner.`;
+  const blocks=buildTimeline(day);
+  document.getElementById("timeline").innerHTML=blocks.map(b=>`<div class="block"><div class="time">${tstr(b.start)}–${tstr(b.end)}</div><div><b>${b.title}</b><small>${b.note||""}</small></div><span class="tag ${b.kind==="urgent"?"urgent":b.kind==="study"?"study":"fixed"}">${b.kind==="urgent"?"URGENT":b.kind==="study"?"STUDY":"FIXED"}</span></div>`).join("")||'<div class="empty">No blocks.</div>';
+  document.getElementById("todayTasks").innerHTML=q.map(t=>taskHTML(t,true)).join("")||'<div class="empty">No task is assigned here yet.</div>';
+}
+function taskHTML(t,checkbox){
+ const p=t.priority===3?"URGENT":t.priority===2?"HIGH":"NORMAL";
+ return `<div class="task ${t.done?"done":""}">
+ ${checkbox?`<input type="checkbox" data-done="${t.id}" ${t.done?"checked":""}>`:"<span></span>"}
+ <div><b>${t.title}</b><small>${t.subject?t.subject+" • ":""}${t.type} • ${t.duration} min${t.due?" • due "+dispDate(t.due):""}${t.note?" • "+t.note:""}</small></div>
+ <div><span class="priority p${t.priority}">${p}</span>${checkbox?"":`<button class="danger" style="padding:5px 8px;margin-left:8px" data-del="${t.id}">Delete</button>`}</div></div>`;
+}
+function renderPlanner(){
+ const T=data.template;wakeTime.value=T.wake;collegeStart.value=T.collegeStart;collegeEnd.value=T.collegeEnd;sleepTime.value=T.sleep;
+ const start="2026-10-27",days=[];for(let i=0;i<12;i++){const d=new Date(start+"T00:00:00");d.setDate(d.getDate()+i);days.push(d.toISOString().slice(0,10))}
+ document.getElementById("calendar").innerHTML=days.map(d=>{
+   const ts=data.tasks.filter(t=>t.targetDate===d&&!t.done).slice(0,4),ev=data.events.filter(e=>e.date===d);
+   return `<div class="daycard ${d===document.getElementById("todayDate").value?"today":""}"><h4>${dispDate(d)}</h4><div class="date">${ev.map(e=>e.title).join(" • ")||"Study / work day"}</div><ul>${ts.map(t=>`<li>${t.title}</li>`).join("")||"<li>Open / revision buffer</li>"}</ul></div>`;
+ }).join("");
+ document.getElementById("allTasks").innerHTML=data.tasks.filter(t=>!t.done).sort((a,b)=>(b.priority-a.priority)||((a.due||"9999").localeCompare(b.due||"9999"))).map(t=>taskHTML(t,false)).join("");
+}
+function renderTimetable(){
+  const B=data.profile.batch||"B1";
+  const labTue={B1:"CN Lab",B2:"OS Lab",B3:"SE Lab"}[B];
+  const labWed={B1:"SE Lab",B2:"CN Lab",B3:"OS Lab"}[B];
+  const labThu={B1:"OS Lab",B2:"SE Lab",B3:"CN Lab"}[B];
+  const rows=[
+    ["Monday","FDS","DRRM","BDA","SE","Fit India","Co/Extra Curricular"],
+    ["Tuesday",labTue,labTue,"Library","BDA","FDS","DRRM"],
+    ["Wednesday","SE","CN","FDS",labWed,labWed,"Library"],
+    ["Thursday",labThu,labThu,"Library","OS",B==="B2"?"B2 Mentoring":"Open / buffer","Co/Extra Curricular"],
+    ["Friday","CN","OS","SE","BDA","DRRM",B==="B3"?"B3 Mentoring":"Open / buffer"],
+    ["Saturday","OS","CN",B==="B1"?"B1 Mentoring":"Open / buffer","Co/Extra Curricular","Co/Extra Curricular","Co/Extra Curricular"]
+  ];
+  weeklyBody.innerHTML=rows.map(r=>`<tr>${r.map((c,i)=>`<td>${i===0?`<b>${c}</b>`:c}</td>`).join("")}</tr>`).join("");
+  batchSelect.value=B;batchBadge.textContent="Batch "+B;
+}
+function renderSem5(){
+ sem5Body.innerHTML=data.sem5.map((s,i)=>{const need=seeNeed(s),cls=need>55?"bad":need>48?"warn":"good";return `<tr><td><b>${s.name}</b></td><td>${s.cr}</td><td><select data-s5="${i}" data-f="target">${["S","A","B","C","D","E"].map(g=>`<option ${g===s.target?"selected":""}>${g}</option>`).join("")}</select></td><td><input data-s5="${i}" data-f="att" type="number" min="0" max="5" step=".5" value="${s.att}"></td><td><input data-s5="${i}" data-f="asg" type="number" min="0" max="15" step=".5" value="${s.asg}"></td><td><input data-s5="${i}" data-f="m1" type="number" min="0" max="20" step=".5" value="${s.m1}"></td><td><input data-s5="${i}" data-f="m2" type="number" min="0" max="20" step=".5" value="${s.m2}"></td><td><b>${fmt(sem5cie(s),1)}</b></td><td class="${cls}"><b>${need>60?"Not possible":fmt(need,1)+"/60"}</b></td></tr>`}).join("");
+ labs.innerHTML=data.labs.map((l,i)=>`<div class="daycard"><h4>${l.name}</h4><div class="date">${l.cr} credits</div><label style="margin-top:8px">Expected grade<select data-lab="${i}">${["S","A","B","C","D","E","F"].map(g=>`<option ${g===l.grade?"selected":""}>${g}</option>`).join("")}</select></label></div>`).join("");
+}
+function renderSem4(){
+ sem4Body.innerHTML=data.sem4.map(c=>`<tr><td>${c.name}</td><td>${c.cr}</td><td><span class="grade">${c.grade}</span></td><td>${GP[c.grade]}</td><td>${fmt(c.cr*GP[c.grade],1)}</td></tr>`).join("");
+ upskillGrade.value=data.upskill;sem4Sgpa.textContent=fmt(sem4calc().sgpa);
+}
+function renderCgpa(){
+ const s4=sem4calc(),s5=sem5sgpa(),rows=[["sem1","Semester I"],["sem2","Semester II"],["sem3","Semester III"]];
+ cgpaRows.innerHTML=rows.map(([k,label])=>`<div class="task"><span></span><div><b>${label}</b><small>Enter once, then it stays saved.</small></div><div class="row"><input style="width:85px" data-prior="${k}" data-pf="sgpa" type="number" min="0" max="10" step=".01" placeholder="SGPA" value="${data.prior[k].sgpa}"><input style="width:76px" data-prior="${k}" data-pf="cr" type="number" min="0" max="40" step=".5" value="${data.prior[k].cr}"></div></div>`).join("")+
+ `<div class="task"><span></span><div><b>Semester IV</b><small>Automatic</small></div><b>${fmt(s4.sgpa)} • ${s4.cr} cr</b></div><div class="task"><span></span><div><b>Semester V</b><small>Projected from targets</small></div><b>${fmt(s5)} • 22 cr</b></div>`;
+ let cp=s4.sgpa*s4.cr+s5*22,cr=s4.cr+22,missing=0;
+ ["sem1","sem2","sem3"].forEach(k=>{const x=data.prior[k];if(x.sgpa!==""&&num(x.cr)>0){cp+=num(x.sgpa)*num(x.cr);cr+=num(x.cr)}else missing++});
+ cgpaValue.textContent=fmt(cp/cr);cgpaNote.textContent=missing?`Partial/projected CGPA. ${missing} earlier semester${missing>1?"s":""} still missing.`:"Projected through Semester V.";
+}
+function renderSettings(){studentName.value=data.profile.name;rollNumber.value=data.profile.roll;useCollege.value=String(data.template.useCollege)}
+function renderAll(){renderToday();renderPlanner();renderTimetable();renderSem5();renderSem4();renderCgpa();renderSettings()}
+function carryForward(){
+ const day=document.getElementById("todayDate").value;const dt=new Date(day+"T00:00:00");dt.setDate(dt.getDate()+1);const next=dt.toISOString().slice(0,10);
+ data.tasks.forEach(t=>{if(!t.done&&t.targetDate===day&&!t.immediate)t.targetDate=next});save();renderAll();toast("Unfinished tasks moved to "+dispDate(next))
+}
+
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{
+ document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x===b));
+ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===b.dataset.view));
+}));
+document.getElementById("todayDate").value="2026-10-28";
+document.getElementById("todayDate").addEventListener("change",()=>{renderToday();renderPlanner()});
+document.getElementById("replanToday").addEventListener("click",()=>{renderToday();toast("Today replanned around current priorities")});
+document.getElementById("carryForward").addEventListener("click",carryForward);
+document.getElementById("taskForm").addEventListener("submit",e=>{
+ e.preventDefault();const id="t"+Date.now();
+ data.tasks.push({id,title:taskTitle.value.trim(),type:taskType.value,subject:taskSubject.value,due:taskDue.value,duration:clamp(num(taskDuration.value),15,480),priority:num(taskPriority.value),immediate:taskImmediate.value==="true",done:false,targetDate:document.getElementById("todayDate").value,note:"Added manually"});
+ save();taskTitle.value="";taskDue.value="";renderAll();toast("Task added and plan updated");
+});
+document.getElementById("saveTemplate").addEventListener("click",()=>{
+ data.template.wake=wakeTime.value;data.template.collegeStart=collegeStart.value;data.template.collegeEnd=collegeEnd.value;data.template.sleep=sleepTime.value;save();renderAll();toast("Day template saved");
+});
+document.addEventListener("change",e=>{
+ if(e.target.dataset.done){const t=data.tasks.find(x=>x.id===e.target.dataset.done);if(t){t.done=e.target.checked;t.immediate=false;save();renderAll();}}
+ if(e.target.dataset.s5!==undefined){const s=data.sem5[num(e.target.dataset.s5)],f=e.target.dataset.f;s[f]=f==="target"?e.target.value:e.target.value;save();renderAll()}
+ if(e.target.dataset.lab!==undefined){data.labs[num(e.target.dataset.lab)].grade=e.target.value;save();renderAll()}
+ if(e.target.id==="upskillGrade"){data.upskill=e.target.value;save();renderAll()}
+ if(e.target.dataset.prior){data.prior[e.target.dataset.prior][e.target.dataset.pf]=e.target.value;save();renderCgpa()}
+ if(e.target.id==="useCollege"){data.template.useCollege=e.target.value==="true";save();renderAll()}
+ if(e.target.id==="batchSelect"){data.profile.batch=e.target.value;save();renderAll();toast("Batch updated — timetable and daily plan refreshed")}
+});
+document.addEventListener("click",e=>{
+ if(e.target.dataset.del){data.tasks=data.tasks.filter(t=>t.id!==e.target.dataset.del);save();renderAll();toast("Task deleted")}
+});
+studentName.addEventListener("input",()=>{data.profile.name=studentName.value;save()});
+rollNumber.addEventListener("input",()=>{data.profile.roll=rollNumber.value;save()});
+exportBtn.addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="ajay-academic-planner-backup.json";a.click();URL.revokeObjectURL(u)
+});
+importFile.addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;try{data=Object.assign(clone(D0),JSON.parse(await f.text()));save();renderAll();toast("Backup imported")}catch(err){toast("Invalid backup file")}e.target.value=""});
+resetBtn.addEventListener("click",()=>{if(confirm("Reset all planner and academic data?")){data=clone(D0);save();renderAll();toast("Site reset")}});
+
+
+let deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  const b=document.getElementById("installAppBtn");
+  const h=document.getElementById("installHint");
+  if(b){b.disabled=false;b.textContent="Install Ajay Planner";}
+  if(h){h.textContent="Ready to install on this phone.";}
+});
+const installBtn=document.getElementById("installAppBtn");
+if(installBtn){
+  installBtn.addEventListener("click",async()=>{
+    if(!deferredInstallPrompt){
+      toast("Use Chrome menu → Add to Home screen / Install app");
+      return;
+    }
+    deferredInstallPrompt.prompt();
+    try{ await deferredInstallPrompt.userChoice; }catch(e){}
+    deferredInstallPrompt=null;
+    installBtn.disabled=true;
+    installBtn.textContent="Installed / use browser menu";
+  });
+}
+window.addEventListener("appinstalled",()=>{
+  const h=document.getElementById("installHint");
+  if(h) h.textContent="Installed. Open Ajay Planner from your Home Screen.";
+  toast("Ajay Planner installed");
+});
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+  });
+}
+
+renderAll();
+</script>
+</body>
+</html>
