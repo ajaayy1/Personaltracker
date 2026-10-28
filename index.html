@@ -294,6 +294,9 @@ function applyUrgentScheduleFix(){
   Object.entries(fixes).forEach(([id,patch])=>{
     const t=data.tasks.find(x=>x.id===id);
     if(t && !t.done) Object.assign(t,patch);
+    if(id==="osint2" && document.getElementById("todayDate")?.value>"2026-10-28"){
+      t.immediate=false;
+    }
   });
   const osEvent=data.events.find(e=>e.title.includes("OS Internal-2"));
   if(osEvent) osEvent.date="2026-10-28";
@@ -309,8 +312,10 @@ function taskScore(t,day){
 }
 function tasksForDay(day){
   const active=data.tasks.filter(t=>!t.done);
-  return active.filter(t=>t.targetDate===day || t.immediate || (t.due && t.due<=day))
-    .sort((a,b)=>taskScore(b,day)-taskScore(a,day));
+  return active.filter(t=>{
+    if(t.type==="Internal" && t.due && t.due<day) return false;
+    return t.targetDate===day || t.immediate || (t.due && t.due<=day);
+  }).sort((a,b)=>taskScore(b,day)-taskScore(a,day));
 }
 function weekdayName(day){
   return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date(day+"T00:00:00").getDay()];
@@ -357,6 +362,35 @@ function dayCollegeBlocks(day){
   }
   return blocks;
 }
+function applyDateSpecificCollegeOverrides(day,blocks){
+  const removeOverlap=(start,end)=>{
+    const s=toMin(start),e=toMin(end);
+    return blocks.filter(b=>b.end<=s || b.start>=e);
+  };
+
+  // Wed 28 Oct: OS Internal-2 uses the afternoon lab period.
+  if(day==="2026-10-28"){
+    blocks=removeOverlap("13:00","15:00");
+    blocks.push({
+      start:toMin("13:00"),end:toMin("15:00"),
+      title:"OS Internal-2",kind:"event",
+      note:"Internal exam during the lab period."
+    });
+  }
+
+  // Thu 29 Oct: CN Internal-2 uses the morning lab period.
+  if(day==="2026-10-29"){
+    blocks=removeOverlap("09:10","11:10");
+    blocks.push({
+      start:toMin("09:10"),end:toMin("11:10"),
+      title:"CN Internal-2",kind:"event",
+      note:"Internal exam during the lab period."
+    });
+  }
+
+  return blocks.sort((a,b)=>a.start-b.start);
+}
+
 function subtractBusy(free,busy){
   let slots=free.slice();
   busy.sort((a,b)=>a.start-b.start).forEach(b=>{
@@ -376,10 +410,11 @@ function buildTimeline(day){
   const T=data.template,w=toMin(T.wake),sleep=toMin(T.sleep);
   let blocks=[{start:w,end:w+30,title:"Wake up + freshen up",kind:"fixed",note:"Start without phone scrolling."}];
 
-  const college=dayCollegeBlocks(day);
+  let college=dayCollegeBlocks(day);
+  college=applyDateSpecificCollegeOverrides(day,college);
   blocks.push(...college);
 
-  const events=data.events.filter(e=>e.date===day);
+  const events=data.events.filter(e=>e.date===day && !["OS Internal-2","CN Internal-2"].includes(e.title));
   events.forEach(e=>{
     blocks.push({start:toMin("08:45"),end:toMin("09:05"),title:e.title,kind:"event",note:"Reminder only — exact exam time was not provided."});
   });
@@ -428,7 +463,7 @@ function renderToday(){
   const urgent=q.filter(t=>t.immediate||t.priority===3)[0];
   document.getElementById("urgentBanner").innerHTML=
     day==="2026-10-28" ? `<b>Today:</b> OS Internal-2 first. After it finishes, switch immediately to CN Internal-2 preparation for tomorrow.` :
-    day==="2026-10-29" ? `<b>Today:</b> CN Internal-2 first. After it finishes, move to the SE assignment and then Mid-2 prep.` :
+    day==="2026-10-29" ? `<b>Today:</b> CN Internal-2 is during the 9:10–11:10 AM lab period. After it finishes, move to the SE assignment and then Mid-2 prep.` :
     urgent?`<b>Do first:</b> ${urgent.title}${urgent.due?` • due ${dispDate(urgent.due)}`:""}`:`<b>No emergency task.</b> Follow the planned study order.`;
   const T=data.template;
   document.getElementById("dayAssumption").textContent=`Wake ${clock12(T.wake)}, ${T.useCollege?`real college timetable loaded, `:"college timetable off, "}sleep ${clock12(T.sleep)}. Edit routine in Planner.`;
