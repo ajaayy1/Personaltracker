@@ -1,4 +1,4 @@
-const CACHE = "ajay-planner-v5";
+const CACHE = "ajay-planner-v6";
 const ASSETS = [
   "./",
   "./index.html",

@@ -227,9 +227,9 @@ const D0={
  upskill:"",
  prior:{sem1:{sgpa:"",cr:20},sem2:{sgpa:"",cr:20},sem3:{sgpa:"",cr:22}},
  tasks:[
-  {id:"osint2",title:"OS Internal-2 preparation",type:"Internal",subject:"OS",due:"2026-10-28",duration:180,priority:3,immediate:true,done:false,targetDate:"2026-10-28",note:"Immediate priority: internal tomorrow."},
-  {id:"cnint2",title:"CN Internal-2 preparation",type:"Internal",subject:"CN",due:"2026-10-29",duration:210,priority:3,immediate:false,done:false,targetDate:"2026-10-28",note:"Main task after OS internal."},
-  {id:"seasg",title:"Complete SE assignment",type:"Assignment",subject:"SE",due:"2026-10-30",duration:150,priority:2,immediate:false,done:false,targetDate:"2026-10-28",note:"Target finish date only; edit if faculty deadline differs."},
+  {id:"osint2",title:"OS Internal-2 — TODAY",type:"Internal",subject:"OS",due:"2026-10-28",duration:180,priority:3,immediate:true,done:false,targetDate:"2026-10-28",note:"Top priority today. Prepare before the internal."},
+  {id:"cnint2",title:"CN Internal-2 — TOMORROW",type:"Internal",subject:"CN",due:"2026-10-29",duration:210,priority:3,immediate:false,done:false,targetDate:"2026-10-28",note:"Start immediately after today’s OS internal; main study tonight."},
+  {id:"seasg",title:"Complete SE assignment",type:"Assignment",subject:"SE",due:"2026-10-30",duration:150,priority:2,immediate:false,done:false,targetDate:"2026-10-29",note:"Do after CN internal unless an earlier faculty deadline comes up."},
   {id:"osu3",title:"OS Unit III — Memory Management",type:"Study",subject:"OS",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-10-30"},
   {id:"cnu3",title:"CN Unit III — Network Layer",type:"Study",subject:"CN",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-10-30"},
   {id:"fdsu3",title:"FDS Unit III — NumPy & pandas",type:"Study",subject:"FDS",due:"2026-11-04",duration:120,priority:2,immediate:false,done:false,targetDate:"2026-10-31"},
@@ -284,6 +284,24 @@ function sem5cie(s){const m2=s.m2===""?num(s.m1):num(s.m2);return clamp(num(s.at
 function seeNeed(s){return Math.max(0,GMIN[s.target]-sem5cie(s))}
 function sem5sgpa(){let cp=0,cr=0;data.sem5.forEach(s=>{cp+=s.cr*GP[s.target];cr+=s.cr});data.labs.forEach(l=>{cp+=l.cr*GP[l.grade];cr+=l.cr});return cp/cr}
 function sem4calc(){let cp=0,cr=0;data.sem4.forEach(x=>{cp+=x.cr*GP[x.grade];cr+=x.cr});if(data.upskill){cp+=.5*GP[data.upskill];cr+=.5}return{cp,cr,sgpa:cp/cr}}
+
+function applyUrgentScheduleFix(){
+  const fixes={
+    osint2:{title:"OS Internal-2 — TODAY",due:"2026-10-28",targetDate:"2026-10-28",priority:3,immediate:true,note:"Top priority today. Prepare before the internal."},
+    cnint2:{title:"CN Internal-2 — TOMORROW",due:"2026-10-29",targetDate:"2026-10-28",priority:3,immediate:false,note:"Start immediately after today’s OS internal; main study tonight."},
+    seasg:{targetDate:"2026-10-29",priority:2,immediate:false,note:"Do after CN internal unless an earlier faculty deadline comes up."}
+  };
+  Object.entries(fixes).forEach(([id,patch])=>{
+    const t=data.tasks.find(x=>x.id===id);
+    if(t && !t.done) Object.assign(t,patch);
+  });
+  const osEvent=data.events.find(e=>e.title.includes("OS Internal-2"));
+  if(osEvent) osEvent.date="2026-10-28";
+  const cnEvent=data.events.find(e=>e.title.includes("CN Internal-2"));
+  if(cnEvent) cnEvent.date="2026-10-29";
+  save();
+}
+
 function taskScore(t,day){
   let score=t.priority*100+(t.immediate?250:0);
   if(t.due){const diff=(new Date(t.due+"T00:00:00")-new Date(day+"T00:00:00"))/86400000;score+=diff<=0?260:Math.max(0,180-diff*35)}
@@ -408,7 +426,10 @@ function renderToday(){
   document.getElementById("sgpaStat").textContent=fmt(sem5sgpa());
   document.getElementById("queueCount").textContent=q.length+" tasks";
   const urgent=q.filter(t=>t.immediate||t.priority===3)[0];
-  document.getElementById("urgentBanner").innerHTML=urgent?`<b>Do first:</b> ${urgent.title}${urgent.due?` • due ${dispDate(urgent.due)}`:""}`:`<b>No emergency task.</b> Follow the planned study order.`;
+  document.getElementById("urgentBanner").innerHTML=
+    day==="2026-10-28" ? `<b>Today:</b> OS Internal-2 first. After it finishes, switch immediately to CN Internal-2 preparation for tomorrow.` :
+    day==="2026-10-29" ? `<b>Today:</b> CN Internal-2 first. After it finishes, move to the SE assignment and then Mid-2 prep.` :
+    urgent?`<b>Do first:</b> ${urgent.title}${urgent.due?` • due ${dispDate(urgent.due)}`:""}`:`<b>No emergency task.</b> Follow the planned study order.`;
   const T=data.template;
   document.getElementById("dayAssumption").textContent=`Wake ${clock12(T.wake)}, ${T.useCollege?`real college timetable loaded, `:"college timetable off, "}sleep ${clock12(T.sleep)}. Edit routine in Planner.`;
   const blocks=buildTimeline(day);
@@ -541,6 +562,7 @@ if("serviceWorker" in navigator){
   });
 }
 
+applyUrgentScheduleFix();
 renderAll();
 </script>
 </body>
